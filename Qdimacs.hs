@@ -5,15 +5,17 @@ module Qdimacs (Variable,
                 readProblem, 
                 normalizeVars, 
                 quantifieUndeclaredVars,
-                isTrivial) where 
+                isTrivial,
+                toText) where 
 
 import Data.Word
+import Data.List
+import Data.Maybe (fromJust)
 
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Maybe (fromJust)
 
-import Debug.Trace
+import Text.Printf
 
 type Variable = Word
 type Literal = Int
@@ -89,3 +91,13 @@ isTrivial (_,[]) = trivallyTrue
 isTrivial p@(v,c) 
     | elem [] c = trivallyFalse
     | otherwise = (Nothing, p)
+
+toText :: QBFProblem -> [String]
+toText (v,c) = (head:vars)++clauses
+    where head = printf "p cnf %d %d" numVars (length c)
+          vars = [q++l | (q,l)<-(zip quant (map toLine v))]
+          clauses = map toLine c
+          numVars = Set.size $ Set.fromList (concat v)
+          toLine l = (intercalate " " $ map show l)++" 0"
+          quant = [if (odd) i then "e " else "a " | i<-[1..]]
+            
