@@ -6,7 +6,7 @@ module Qdimacs (Variable,
                 normalizeVars, 
                 quantifieUndeclaredVars,
                 isTrivial,
-                toText) where 
+                toQdimacs) where 
 
 import Data.Word
 import Data.List
@@ -92,8 +92,8 @@ isTrivial p@(v,c)
     | elem [] c = trivallyFalse
     | otherwise = (Nothing, p)
 
-toText :: QBFProblem -> [String]
-toText (v,c) = (head:vars)++clauses
+toQdimacs :: QBFProblem -> [String]
+toQdimacs (v,c) = (head:vars)++clauses
     where head = printf "p cnf %d %d" numVars (length c)
           vars = [q++l | (q,l)<-(zip quant (map toLine v))]
           clauses = map toLine c
