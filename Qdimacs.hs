@@ -70,10 +70,11 @@ normalizeVars (vars, clauses) = (v',c')
           ins i s (h:t)
             | Set.member (IndexedVar h 1) s = ins i s t 
             | otherwise = ins (i+1) (Set.insert (IndexedVar h i) s) t 
-          mapping = ins 1 Set.empty (concat vars)
+          vars' = mergeEmptyQuantifier vars
+          mapping = ins 1 Set.empty (concat vars')
           replace :: Variable -> Variable
           replace v = (index.fromJust) (Set.lookupLE (IndexedVar v 1) mapping)
-          v' = map (map replace) vars
+          v' = map (map replace) vars'
           c' = map (map (onAbs replace)) clauses
 
 quantifieUndeclaredVars :: QBFProblem -> QBFProblem
@@ -100,4 +101,10 @@ toQdimacs (v,c) = (head:vars)++clauses
           numVars = Set.size $ Set.fromList (concat v)
           toLine l = (intercalate " " $ map show l)++" 0"
           quant = [if (odd) i then "e " else "a " | i<-[1..]]
-            
+
+mergeEmptyQuantifier :: [[Variable]] -> [[Variable]]
+mergeEmptyQuantifier (a:[]:c:t) = (a++c):(mergeEmptyQuantifier t)
+mergeEmptyQuantifier [a,[]] = [a]
+mergeEmptyQuantifier [a] = [a]
+mergeEmptyQuantifier [] = []
+mergeEmptyQuantifier (h:t) = h:(mergeEmptyQuantifier t)
