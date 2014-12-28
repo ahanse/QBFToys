@@ -6,7 +6,8 @@ module Qdimacs (Variable,
                 normalizeVars, 
                 quantifieUndeclaredVars,
                 isTrivial,
-                toQdimacs) where 
+                toQdimacs,
+                qbfSizeNaive) where 
 
 import Data.Word
 import Data.List
@@ -63,6 +64,13 @@ onAbs :: (Word -> Word) -> Int -> Int
 onAbs f i = let s = signum i in 
      ((fromIntegral.f.fromIntegral.abs) i)*s
 
+mergeEmptyQuantifier :: [[Variable]] -> [[Variable]]
+mergeEmptyQuantifier (a:[]:c:t) = (a++c):(mergeEmptyQuantifier t)
+mergeEmptyQuantifier [a,[]] = [a]
+mergeEmptyQuantifier [a] = [a]
+mergeEmptyQuantifier [] = []
+mergeEmptyQuantifier (h:t) = h:(mergeEmptyQuantifier t)
+
 normalizeVars :: QBFProblem -> QBFProblem
 normalizeVars (vars, clauses) = (v',c')
     where ins :: Word -> Set IndexedVar -> [Variable] -> Set IndexedVar
@@ -93,6 +101,9 @@ isTrivial p@(v,c)
     | elem [] c = trivallyFalse
     | otherwise = (Nothing, p)
 
+qbfSizeNaive :: QBFProblem -> (Int, Int)
+qbfSizeNaive (v,c) = (Set.size $ Set.fromList (concat v), length c)
+
 toQdimacs :: QBFProblem -> [String]
 toQdimacs (v,c) = (head:vars)++clauses
     where head = printf "p cnf %d %d" numVars (length c)
@@ -102,9 +113,3 @@ toQdimacs (v,c) = (head:vars)++clauses
           toLine l = (intercalate " " $ map show l)++" 0"
           quant = [if (odd) i then "e " else "a " | i<-[1..]]
 
-mergeEmptyQuantifier :: [[Variable]] -> [[Variable]]
-mergeEmptyQuantifier (a:[]:c:t) = (a++c):(mergeEmptyQuantifier t)
-mergeEmptyQuantifier [a,[]] = [a]
-mergeEmptyQuantifier [a] = [a]
-mergeEmptyQuantifier [] = []
-mergeEmptyQuantifier (h:t) = h:(mergeEmptyQuantifier t)
