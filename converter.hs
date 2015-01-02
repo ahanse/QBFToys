@@ -1,4 +1,5 @@
 import Qdimacs 
+import Thf
 import System.IO
 import System.Environment
 import Text.Printf
@@ -26,7 +27,7 @@ main = do
     input <- getContents
     let prop = readProblem $ lines input 
     let (desc, prop') = cleanQBF prop
-    let output = toQdimacs prop'
+    let output = toThf prop'
     maybePath <- getOutfileName
     case maybePath of
         Just path -> do 
