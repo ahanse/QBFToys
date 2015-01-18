@@ -6,17 +6,16 @@ import os
 import os.path
 import csv
 import sys
-from subprocess import PIPE, Popen
+from subprocess import PIPE, check_output, CalledProcessError
 
 def convert(infile, outfileName, command):
     command = "{} | ./converter -o {}".format(command, outfileName)
-    p = Popen(command, shell=True, stdin=infile, stdout=PIPE)
-    h=p.stdout
-    h=h.readline().split()
-    preprocessorSolved = False
+    h = check_output(command, shell=True, stdin=infile)
+    h=h.split()
+    statusFlag = "n"
     if len(h)>2:
-        preprocessorSolved = True
-    return (int(h[0]), int(h[1]), preprocessorSolved) 
+        statusFlag = "s"
+    return (int(h[0]), int(h[1]), statusFlag) 
 
 parser = argparse.ArgumentParser(description='Recursively converts .qdimacs problems into thf problems.')
 parser.add_argument('input',type=str,
@@ -61,8 +60,15 @@ with open(args.results,"wb") as resultsFile:
                 row = []
                 for i in xrange(len(preprocessors)):
                     outpath = os.path.join(args.output,str(i),fileName+".thf")
-                    (variables,clauses,presolved) = convert(f,outpath,preprocessors[i])
-                    print "{},{},{}".format(variables,clauses,presolved),
+                    try:
+                        (variables,clauses,statusFlag) = convert(f,outpath,preprocessors[i])
+                        row.extend([variables, clauses, statusFlag])
+                        print "{},{},{}".format(variables,clauses,statusFlag),
+                    except OSError:
+                        print "[Error exec.:{}]".format(preprocessors[i])
+                        row.extend([0, 0, "e"])
+                    except CalledProcessError:
+                        print "[Error called exec.:{}]".format(preprocessors[i])
+                        row.extend([0, 0, "e"])
                     f.seek(0)
-                    row.extend([variables, clauses, int(presolved)])
                 results.writerow(row)
