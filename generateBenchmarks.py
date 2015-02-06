@@ -57,7 +57,7 @@ with open(args.results,"wb") as resultsFile:
                 print "\nConverting: {0}:".format(fileName)
                 f = open(os.path.join(root,file),"r")
 
-                row = []
+                row = [file]
                 for i in xrange(len(preprocessors)):
                     outpath = os.path.join(args.output,str(i),fileName+".thf")
                     try:
