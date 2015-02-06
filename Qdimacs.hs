@@ -107,7 +107,7 @@ qbfSizeNaive (v,c) = (Set.size $ Set.fromList (concat v), length c)
 toQdimacs :: QBFProblem -> [String]
 toQdimacs (v,c) = (head:vars)++clauses
     where head = printf "p cnf %d %d" numVars (length c)
-          vars = [q++l | (q,l)<-(zip quant (map toLine v))]
+          vars = delete "e  0" [q++l | (q,l)<-(zip quant (map toLine v))]
           clauses = map toLine c
           numVars = Set.size $ Set.fromList (concat v)
           toLine l = (intercalate " " $ map show l)++" 0"
