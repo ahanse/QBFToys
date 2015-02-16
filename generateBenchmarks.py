@@ -8,12 +8,18 @@ import csv
 import sys
 from subprocess import PIPE, check_output, CalledProcessError
 
+class PreprocessorError(Exception):
+    pass
+
 def convert(infile, outfileName, command):
-    command = "{} | ./converter -o {}".format(command, outfileName)
-    h = check_output(command, shell=True, stdin=infile)
+    command = "{} | ./converter -o {}; echo ${{PIPESTATUS[0]}}".format(command, outfileName)
+    h = check_output(command, executable="/bin/bash", shell=True, stdin=infile)
     h=h.split()
+    returnCode = h[-1]
+    if not (returnCode == "0" or returnCode == "10" or returnCode == "20"): 
+       raise PreprocessorError() 
     statusFlag = "n"
-    if len(h)>2:
+    if len(h)==5:
         statusFlag = "s"
     return (int(h[0]), int(h[1]), statusFlag) 
 
@@ -69,6 +75,9 @@ with open(args.results,"wb") as resultsFile:
                         row.extend([0, 0, "e"])
                     except CalledProcessError:
                         print "[Error called exec.:{}]".format(preprocessors[i])
+                        row.extend([0, 0, "e"])
+                    except PreprocessorError:
+                        print "[Preprocessor Error:{}]".format(preprocessors[i])
                         row.extend([0, 0, "e"])
                     f.seek(0)
                 results.writerow(row)
