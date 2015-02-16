@@ -10,16 +10,22 @@ from subprocess import PIPE, check_output, CalledProcessError
 
 class PreprocessorError(Exception):
     pass
+class ConverterError(Exception):
+    pass
 
 def convert(infile, outfileName, command):
-    command = "{} | ./converter -o {}; echo ${{PIPESTATUS[0]}}".format(command, outfileName)
+    cmdString = "{} | ./converter -o {}; echo ${{PIPESTATUS[0]}} ${{PIPESTATUS[1]}}"
+    command = cmdString.format(command, outfileName)
     h = check_output(command, executable="/bin/bash", shell=True, stdin=infile)
     h=h.split()
-    returnCode = h[-1]
-    if not (returnCode == "0" or returnCode == "10" or returnCode == "20"): 
-       raise PreprocessorError() 
+    returnCode1 = h[-2]
+    returnCode2 = h[-1]
+    if not returnCode2 == "0":
+        raise ConverterError()
+    if not (returnCode1 == "0" or returnCode1 == "10" or returnCode1 == "20"): 
+        raise PreprocessorError() 
     statusFlag = "n"
-    if len(h)==5:
+    if len(h)==6:
         statusFlag = "s"
     return (int(h[0]), int(h[1]), statusFlag) 
 
@@ -73,8 +79,8 @@ with open(args.results,"wb") as resultsFile:
                     except OSError:
                         print "[Error exec.:{}]".format(preprocessors[i])
                         row.extend([0, 0, "e"])
-                    except CalledProcessError:
-                        print "[Error called exec.:{}]".format(preprocessors[i])
+                    except ConverterError:
+                        print "[Converter Error:{}]".format(preprocessors[i])
                         row.extend([0, 0, "e"])
                     except PreprocessorError:
                         print "[Preprocessor Error:{}]".format(preprocessors[i])
