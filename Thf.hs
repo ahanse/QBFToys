@@ -3,7 +3,6 @@ module Thf (toThf) where
 import Qdimacs
 import Text.Printf
 import Data.List
-
 convertLiteral :: Literal -> String
 convertLiteral l
     | signum l == -1 = printf "~(X%d)" (abs l)
