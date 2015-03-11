@@ -63,7 +63,7 @@ until no more clauses are quantified blocked.
 The paper gives an in depth discussion of QBCE. The paper proves, that some
 earlier preprocessing techniques are subsumed by QBCE.
 
-\subsection{Quantifed Blocked Covered Clause Elimination}
+\subsection{Quantified Blocked Covered Clause Elimination}
 The \emph{bloqqer} tool allows the user to (de)activate the \emph{Covered
 Literal Addition} technique. This technique is part of quantified blocked
 covered clause elimination, which is an extension to QBCE.
@@ -79,7 +79,25 @@ Enriching a clause with the literals as noted in the quote, does not change
 unsatisfiability. If the resulting clause is either blocked or tautological, it
 can be freely removed. 
 
-\subsection{Hidden Blocked Clause Elimination}
+\subsection{Hidden Blocked Clause Elimination/Tautology Elimination}
+
+Using implications contained within a QBF literals are added to clauses, to
+discover blocked clauses and/or tautologies.
+
+A literal is a \emph{quantified hidden literal} with respect to some clause $C$.
+\begin{definition}{Quantified Hidden Literal}
+Let $\phi=S_1\dots S_n\psi$ be a QBF and $C$ be a clause in $\psi$. A literal
+$l$ is a \emph{quantified hidden literal}, if the QBF problem $\phi$ has
+contains a clause $(l_1,\dots,l_n,\bar{l})$ with $l_i\leq l$ and
+$l_1,\dots,\l_n\in C$.
+\end{definition}
+
+If $l$ is a quantified hidden literal with respect to some clause $C$, then this
+clause can be replaced with $C\cup\{l\}$, without changing the unsatisfiability
+of the QBF problem.
+
+Again clauses obtained by adding quantified hidden literals might become blocked
+or tautological and thus might be removed safely. 
 
 \subsection{Hidden Clause Elimination}
 
