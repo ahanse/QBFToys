@@ -6,7 +6,7 @@ import os
 import os.path
 import csv
 import sys
-from subprocess import PIPE, check_output, CalledProcessError
+from subprocess import PIPE, check_output, CalledProcessError, call
 
 class PreprocessorError(Exception):
     pass
@@ -14,18 +14,19 @@ class ConverterError(Exception):
     pass
 
 def convert(infile, outfileName, command):
-    cmdString = "{} | ./converter -o {}; echo ${{PIPESTATUS[0]}} ${{PIPESTATUS[1]}}"
-    command = cmdString.format(command, outfileName)
-    h = check_output(command, executable="/bin/bash", shell=True, stdin=infile)
-    h=h.split()
-    returnCode1 = h[-2]
-    returnCode2 = h[-1]
-    if not returnCode2 == "0":
-        raise ConverterError()
-    if not (returnCode1 == "0" or returnCode1 == "10" or returnCode1 == "20"): 
+    prepFile = open(outfileName+".qdimacs", "w")
+    returnCode = call(command, shell=True, stdin=infile, stdout=prepFile)
+    prepFile.close()
+    if not (returnCode == 0 or returnCode == 10 or returnCode == 20): 
         raise PreprocessorError() 
+   
+    # convert
+    convertedFile = open(outfileName+".qdimacs","r")
+    command = "./converter -o {}".format(outfileName+".thf")
+    h = check_output(command, shell=True, stdin=convertedFile)
+    h=h.split()
     statusFlag = "n"
-    if len(h)==6:
+    if len(h)==4:
         statusFlag = "s"
     return (int(h[0]), int(h[1]), statusFlag) 
 
@@ -71,13 +72,16 @@ with open(args.results,"wb") as resultsFile:
 
                 row = [file]
                 for i in xrange(len(preprocessors)):
-                    outpath = os.path.join(args.output,str(i),fileName+".thf")
+                    outpath = os.path.join(args.output,str(i),fileName)
                     try:
                         (variables,clauses,statusFlag) = convert(f,outpath,preprocessors[i])
                         row.extend([variables, clauses, statusFlag])
                         print "{},{},{}".format(variables,clauses,statusFlag),
                     except OSError:
                         print "[Error exec.:{}]".format(preprocessors[i])
+                        row.extend([0, 0, "e"])
+                    except CalledProcessError:
+                        print "[Called Process Error exec.:{}]".format(preprocessors[i])
                         row.extend([0, 0, "e"])
                     except ConverterError:
                         print "[Converter Error:{}]".format(preprocessors[i])
