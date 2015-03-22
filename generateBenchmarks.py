@@ -8,86 +8,106 @@ import csv
 import sys
 from subprocess import PIPE, check_output, CalledProcessError, call
 
+import scheduler
+
+# TODO: temp management
+
 class PreprocessorError(Exception):
     pass
 class ConverterError(Exception):
     pass
 
-def convert(infile, outfileName, command):
-    prepFile = open(outfileName+".qdimacs", "w")
-    returnCode = call(command, shell=True, stdin=infile, stdout=prepFile)
-    prepFile.close()
-    if not (returnCode == 0 or returnCode == 10 or returnCode == 20): 
-        raise PreprocessorError() 
-   
-    # convert
-    convertedFile = open(outfileName+".qdimacs","r")
-    command = "./converter -o {}".format(outfileName+".thf")
-    h = check_output(command, shell=True, stdin=convertedFile)
-    h=h.split()
-    statusFlag = "n"
-    if len(h)==4:
-        statusFlag = "s"
-    return (int(h[0]), int(h[1]), statusFlag) 
+#def convert(infile, outfileName, command):
+def convert(infileFullName, infileName, outpath, prepNmr, command):
+    print "Converting {} with {}.".format(infileName,command)
+    with open(infileFullName,"r") as infile: 
+        try:
+            outfileFullName =os.path.join(outpath,str(prepNmr),infileName)
+            prepFile = open(outfileFullName+".qdimacs", "w")
+            returnCode = call(command, shell=True, stdin=infile, stdout=prepFile)
+            prepFile.close()
+            if not (returnCode == 0 or returnCode == 10 or returnCode == 20): 
+                raise PreprocessorError() 
+           
+            # convert
+            convertedFile = open(outfileFullName+".qdimacs","r")
+            command = "./converter -o {}".format(outfileFullName+".thf")
+            h = check_output(command, shell=True, stdin=convertedFile)
+            h=h.split()
+            statusFlag = "n"
+            if len(h)==4:
+                statusFlag = "s"
+            return [int(h[0]), int(h[1]), statusFlag] 
+        except OSError:
+            print "[Error exec.:{}]".format(command)
+        except CalledProcessError:
+            print "[Called Process Error exec.:{}]".format(command)
+        except ConverterError:
+            print "[Converter Error:{}]".format(command)
+        except PreprocessorError:
+            print "[Preprocessor Error:{}]".format(command)
+        return [0, 0, "e"]
 
-parser = argparse.ArgumentParser(description='Recursively converts .qdimacs problems into thf problems.')
-parser.add_argument('input',type=str,
-    help='the folder containing the problems.')
-parser.add_argument('output',type=str,
-    help='the target folder.')
-parser.add_argument("-r", "--results", type=str, help="name for csv file containing the results.",
-    default="results.csv")
-parser.add_argument("-p","--preprocessors", help="CSV file containing the preprocessor commands.",
-    type=str, default="preprocessors.csv")
-args = parser.parse_args()
+def newRun(args):
+    print "Starting new run."
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
 
-if not os.path.exists(args.output):
-    os.makedirs(args.output)
+    preprocessors = []
+    # Read prprocessor description
+    try:
+        with open(args.preprocessors, 'rb') as csvFile:
+            preprocessorReader = csv.reader(csvFile, delimiter=';')
+            preprocessorReader.next() #skip header
+            preprocessors=map(lambda x:x[1], preprocessorReader)
+    except IndexError:
+        print "Not enough columngs in preprocessor decleration."
+        sys.exit(1)
 
-preprocessors = []
-# Read prprocessor description
-try:
-    with open(args.preprocessors, 'rb') as csvFile:
-        preprocessorReader = csv.reader(csvFile, delimiter=';')
-        preprocessorReader.next() #skip header
-        preprocessors=map(lambda x:x[1], preprocessorReader)
-except IndexError:
-    print "Not enough columngs in preprocessor decleration."
-    sys.exit(1)
+    preprocessors.insert(0,"cat")
 
-preprocessors.insert(0,"cat")
+    for i in xrange(len(preprocessors)):
+        path = os.path.join(args.output,str(i))
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-for i in xrange(len(preprocessors)):
-    path = os.path.join(args.output,str(i))
-    if not os.path.exists(path):
-        os.makedirs(path)
-with open(args.results,"wb") as resultsFile:
-    results = csv.writer(resultsFile, delimiter=";")
+    preprocessors = zip(xrange(len(preprocessors)),preprocessors)
+
+    tool = scheduler.Tool(args.results, [])
     for root, dirs, files in os.walk(args.input):
         for file in files:
             fileName, fileExtension = os.path.splitext(file)	
             if fileExtension == ".qdimacs":
-                print "\nConverting: {0}:".format(fileName)
-                f = open(os.path.join(root,file),"r")
+                fullName = os.path.join(root,file)
+                instance = scheduler.Instance(file,[fullName, fileName, args.output], preprocessors)
+                tool.addInstance(instance)
+   
+    sche = scheduler.Scheduler(convert,[tool]) 
+    sche.run()
 
-                row = [file]
-                for i in xrange(len(preprocessors)):
-                    outpath = os.path.join(args.output,str(i),fileName)
-                    try:
-                        (variables,clauses,statusFlag) = convert(f,outpath,preprocessors[i])
-                        row.extend([variables, clauses, statusFlag])
-                        print "{},{},{}".format(variables,clauses,statusFlag),
-                    except OSError:
-                        print "[Error exec.:{}]".format(preprocessors[i])
-                        row.extend([0, 0, "e"])
-                    except CalledProcessError:
-                        print "[Called Process Error exec.:{}]".format(preprocessors[i])
-                        row.extend([0, 0, "e"])
-                    except ConverterError:
-                        print "[Converter Error:{}]".format(preprocessors[i])
-                        row.extend([0, 0, "e"])
-                    except PreprocessorError:
-                        print "[Preprocessor Error:{}]".format(preprocessors[i])
-                        row.extend([0, 0, "e"])
-                    f.seek(0)
-                results.writerow(row)
+def resumeRun(args):
+    print "Restoring from", args.savedState
+    sche = scheduler.restoreScheduler(args.savedState)
+    print "Resuming"
+    sche.run()
+
+parser = argparse.ArgumentParser(description='Recursively converts .qdimacs problems into thf problems.')
+subparsers = parser.add_subparsers()
+parser_start =  subparsers.add_parser('start')
+parser_start.add_argument('input',type=str,
+    help='the folder containing the problems.')
+parser_start.add_argument('output',type=str,
+    help='the target folder.')
+parser_start.add_argument("-r", "--results", type=str, help="name for csv file containing the results.",
+    default="results.csv")
+parser_start.add_argument("-p","--preprocessors", help="CSV file containing the preprocessor commands.",
+    type=str, default="preprocessors.csv")
+parser_start.set_defaults(func=newRun)
+
+parser_resume =  subparsers.add_parser('resume')
+parser_resume.add_argument('savedState',type=str,
+    help='File containing a previously saved state.')
+parser_resume.set_defaults(func=resumeRun)
+
+args = parser.parse_args()
+args.func(args)
