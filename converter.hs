@@ -5,6 +5,7 @@ import System.Environment
 import Text.Printf
 import System.Console.GetOpt
 import System.Exit
+import qualified Data.ByteString.Lazy as BS
 
 data Flag = Normalize | Output String
     deriving (Eq,Ord,Show)
@@ -52,11 +53,11 @@ main = do
             case maybePath of
                 Just path -> do 
                     handel <- openFile path WriteMode
-                    mapM_ (hPutStrLn handel) output 
+                    mapM_ (BS.hPutStr handel) output 
                     hClose handel
                     putStrLn desc
                 Nothing -> do 
-                    mapM_ putStrLn output
+                    mapM_ BS.putStrLn output
         (_,_,errs) -> do
             hPutStrLn stderr (concat errs ++ usageInfo header flags)
             exitWith (ExitFailure 1)

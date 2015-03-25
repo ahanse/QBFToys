@@ -1,29 +1,51 @@
 module Thf (toThf) where
 
 import Qdimacs
-import Text.Printf
 import Data.List
-convertLiteral :: Literal -> String
+
+import qualified Data.ByteString.Lazy               as L
+import           Data.ByteString.Lazy.Builder
+import           Data.ByteString.Lazy.Builder.ASCII (intDec)
+import           Data.Monoid
+import           Data.Foldable                        (foldMap)
+import           Data.List                            (intersperse)
+
+convertLiteral :: Literal -> Builder
 convertLiteral l
-    | signum l == -1 = printf "~(X%d)" (abs l)
-    | otherwise = printf "X%d" l
+    | signum l == -1 = stringUtf8 "~(X" <> intDec (abs l) <> charUtf8 ')'
+    | otherwise = charUtf8 'X' <> intDec l
 
-convertClause :: [Literal] -> String
-convertClause = (intercalate "|").(map convertLiteral)
+convertClause :: [Literal] -> Builder
+convertClause [] = mempty
+convertClause (c:cs) = 
+    convertLiteral c <> mconcat [charUtf8 '|' <> convertLiteral c'|c'<-cs]
 
-convertQuant = (intercalate ",").(map (printf "X%d: $o"))
+convertTypedVar i = charUtf8 'X' <> intDec i <> stringUtf8 ": $o"
+convertQuant [] = mempty
+convertQuant (c:cs) =
+    convertTypedVar c <> mconcat [charUtf8 ',' <> convertTypedVar c'|c'<-cs]
 
-convertTE :: [[Variable]] -> [Clause] -> String
-convertTE [] c = printf "((%s))" (intercalate ")&(" (map convertClause c))
+addQuant qChar varBuilder formularBuilder =
+    charUtf8 '(' <> charUtf8 qChar <> stringUtf8 " [" <> varBuilder <> 
+    stringUtf8 "]:" <> formularBuilder <> charUtf8 ')'
+
+convertClauseList [] = stringUtf8 "()"
+convertClauseList (c:cs) =
+    stringUtf8 "(("<> convertClause c <> 
+    mconcat [stringUtf8 ")&(" <> convertClause c'|c'<-cs] <> stringUtf8 "))"
+
+convertTE :: [[Variable]] -> [Clause] -> Builder
+convertTE [] c = convertClauseList c
 convertTE (q:t) c 
     | q==[] = convertFA t c
-    | otherwise = printf "(? [%s]:%s)" (convertQuant q) (convertFA t c)
+    | otherwise = addQuant '?' (convertQuant q) (convertFA t c)
 
-convertFA :: [[Variable]] -> [Clause] -> String
-convertFA [] c = printf "((%s))" (intercalate ")&(" (map convertClause c))
+convertFA :: [[Variable]] -> [Clause] -> Builder
+convertFA [] c = convertClauseList c
 convertFA (q:t) c 
     | q==[] = convertTE t c
-    | otherwise = printf "(! [%s]:%s)" (convertQuant q) (convertTE t c)
+    | otherwise = addQuant '!' (convertQuant q) (convertFA t c)
 
-toThf :: QBFProblem -> [String]
-toThf (v,c) = [printf "thf(c,conjecture,%s)." (convertTE v c)]
+toThf :: QBFProblem -> [L.ByteString]
+toThf (v,c) = [toLazyByteString thf] 
+    where thf =  stringUtf8 "thf(c,conjecture," <> (convertTE v c) <> stringUtf8 ")." 
