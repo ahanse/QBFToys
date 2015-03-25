@@ -16,9 +16,18 @@ import Data.Maybe (fromJust)
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import Text.Printf
+import qualified Data.ByteString.Lazy               as L
+import           Data.ByteString.Lazy.Builder
+import           Data.ByteString.Lazy.Builder.ASCII (intDec)
+import           Data.Monoid
+import           Data.Foldable                        (foldMap)
+import           Data.List                            (intersperse)
 
-type Variable = Word
+infixr 4 <>
+(<>) :: Monoid m => m -> m -> m
+(<>) = mappend
+
+type Variable = Int --Word
 type Literal = Int
 type Clause = [Literal]
 type QBFProblem = ([[Variable]], [Clause])
@@ -60,7 +69,7 @@ instance Eq IndexedVar where
 instance Ord IndexedVar where
     compare (IndexedVar a _) (IndexedVar b _) = compare a b
 
-onAbs :: (Word -> Word) -> Int -> Int
+onAbs :: (Int -> Int) -> Int -> Int
 onAbs f i = let s = signum i in 
      ((fromIntegral.f.fromIntegral.abs) i)*s
 
@@ -73,7 +82,7 @@ mergeEmptyQuantifier (h:t) = h:(mergeEmptyQuantifier t)
 
 normalizeVars :: QBFProblem -> QBFProblem
 normalizeVars (vars, clauses) = (v',c')
-    where ins :: Word -> Set IndexedVar -> [Variable] -> Set IndexedVar
+    where ins :: Int -> Set IndexedVar -> [Variable] -> Set IndexedVar
           ins i s [] = s
           ins i s (h:t)
             | Set.member (IndexedVar h 1) s = ins i s t 
@@ -104,12 +113,13 @@ isTrivial p@(v,c)
 qbfSizeNaive :: QBFProblem -> (Int, Int)
 qbfSizeNaive (v,c) = (Set.size $ Set.fromList (concat v), length c)
 
-toQdimacs :: QBFProblem -> [String]
-toQdimacs (v,c) = (head:vars)++clauses
-    where head = printf "p cnf %d %d" numVars (length c)
-          vars = delete "e  0" [q++l | (q,l)<-(zip quant (map toLine v))]
-          clauses = map toLine c
-          numVars = Set.size $ Set.fromList (concat v)
-          toLine l = (intercalate " " $ map show l)++" 0"
-          quant = [if (odd) i then "e " else "a " | i<-[1..]]
+toQdimacs _ = [L.empty]
+-- TODO: Implement this!
+--toQdimacs :: QBFProblem -> [L.ByteString]
+--toQdimacs (v,c) = toLazyByteString $ head <> vars <> mconcat [toLine c'|c'<- c]
+--    where head = stringUtf8 "p cnf " <> intDec numVars <> charUtf8 ' ' <> intDec (length c)
+--          vars = BS.pack $ delete "e  0" [q++l | (q,l)<-(zip quant (map toLine v))]
+--          numVars = Set.size $ Set.fromList (concat v)
+--          toLine (l:ls) = decInt l <> mconcat [charUtf8 ' '<> decInt l'| l'<- ls]<> stringUtf8 " 0"
+--          quant = stringUtf8 [if (odd) i then "e " else "a " | i<-[1..]]
 
