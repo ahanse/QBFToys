@@ -5,7 +5,7 @@ import System.Environment
 import Text.Printf
 import System.Console.GetOpt
 import System.Exit
-import qualified Data.ByteString.Lazy as BS
+import Data.ByteString.Lazy.Builder (hPutBuilder)
 
 data Flag = Normalize | Output String
     deriving (Eq,Ord,Show)
@@ -52,12 +52,15 @@ main = do
                 maybePath = getOutfileName args
             case maybePath of
                 Just path -> do 
-                    handel <- openFile path WriteMode
-                    mapM_ (BS.hPutStr handel) output 
-                    hClose handel
+                    handle <- openFile path WriteMode
+                    hSetBinaryMode handle True
+                    hSetBuffering handle $ BlockBuffering Nothing
+                    hPutBuilder handle output
+                    hClose handle
                     putStrLn desc
                 Nothing -> do 
-                    mapM_ BS.putStrLn output
+                    -- stdout!
+                    hPutBuilder stdout output
         (_,_,errs) -> do
             hPutStrLn stderr (concat errs ++ usageInfo header flags)
             exitWith (ExitFailure 1)
