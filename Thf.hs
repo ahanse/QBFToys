@@ -46,6 +46,5 @@ convertFA (q:t) c
     | q==[] = convertTE t c
     | otherwise = addQuant '!' (convertQuant q) (convertFA t c)
 
-toThf :: QBFProblem -> [L.ByteString]
-toThf (v,c) = [toLazyByteString thf] 
-    where thf =  stringUtf8 "thf(c,conjecture," <> (convertTE v c) <> stringUtf8 ")." 
+toThf :: QBFProblem -> Builder
+toThf (v,c) = stringUtf8 "thf(c,conjecture," <> (convertTE v c) <> stringUtf8 ")." 

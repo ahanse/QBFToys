@@ -23,9 +23,6 @@ import           Data.Monoid
 import           Data.Foldable                        (foldMap)
 import           Data.List                            (intersperse)
 
-infixr 4 <>
-(<>) :: Monoid m => m -> m -> m
-(<>) = mappend
 
 type Variable = Int --Word
 type Literal = Int
@@ -113,13 +110,13 @@ isTrivial p@(v,c)
 qbfSizeNaive :: QBFProblem -> (Int, Int)
 qbfSizeNaive (v,c) = (Set.size $ Set.fromList (concat v), length c)
 
-toQdimacs _ = [L.empty]
--- TODO: Implement this!
---toQdimacs :: QBFProblem -> [L.ByteString]
---toQdimacs (v,c) = toLazyByteString $ head <> vars <> mconcat [toLine c'|c'<- c]
---    where head = stringUtf8 "p cnf " <> intDec numVars <> charUtf8 ' ' <> intDec (length c)
---          vars = BS.pack $ delete "e  0" [q++l | (q,l)<-(zip quant (map toLine v))]
---          numVars = Set.size $ Set.fromList (concat v)
---          toLine (l:ls) = decInt l <> mconcat [charUtf8 ' '<> decInt l'| l'<- ls]<> stringUtf8 " 0"
---          quant = stringUtf8 [if (odd) i then "e " else "a " | i<-[1..]]
+toQdimacs :: QBFProblem -> Builder
+toQdimacs (v,c) = head <> vars v <> mconcat [toLine c'|c'<- c]
+    where head = stringUtf8 "p cnf " <> intDec numVars <> charUtf8 ' ' <> intDec (length c)<>charUtf8 '\n'
+          numVars = Set.size $ Set.fromList (concat v)
+          vars (v:vs) = emptyOrE v <> mconcat [q <> (toLine l) | (q,l)<-(zip quant vs)]
+          quant = map stringUtf8 [if (odd) i then "e " else "a " | i<-[2..]]
+          toLine (l:ls) = intDec l <> mconcat [charUtf8 ' '<> intDec l'| l'<- ls]<> stringUtf8 " 0\n"
+          emptyOrE [] = mempty
+          emptyOrE v = stringUtf8 "e " <> toLine v
 
