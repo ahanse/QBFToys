@@ -19,7 +19,7 @@ class StdOutWrapper:
 class Instance:
     def __init__(self, name, constantArgs, versions):
         self.constantArgs = constantArgs
-        self.versions = versions
+        self.versions = list(versions)
         self.name = name
 
     def getNewVersion(self): # throws an index error if no version is left
