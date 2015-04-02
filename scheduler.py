@@ -41,7 +41,7 @@ class Tool:
                 self.currentVersion = self.currentInstance.getNewVersion()
             except (AttributeError, IndexError):
                 self.currentInstance = self.instances.pop(0) # throws an index error if no version is left
-
+                print "====== Remaining instances: {} =====".format(len(self.instances)+1)
                 self._res.append(self.currentRow)
                 self.currentRow = [self.currentInstance.name]
                 self.currentVersion = self.currentInstance.getNewVersion()
@@ -58,7 +58,7 @@ class Tool:
                 outfile.writerow(row)
 
 class Scheduler:
-    def __init__(self, task, tools, maxTemp=0, continueTemp=0):
+    def __init__(self, task, tools, maxTemp=0, continueTemp=0, saveFrequenzy=0):
         self.task = task
         self.tools = tools
         if maxTemp < continueTemp:
@@ -67,12 +67,20 @@ class Scheduler:
             maxTemp = continueTemp = 0
         self.maxTemp = maxTemp
         self.continueTemp = continueTemp
+        self.saveCounter = 1
+        self.instanceCounter = 0 
+        self.saveFrequenzy = saveFrequenzy
     
     def run(self):
         for tool in self.tools:
             while True:
                 try:
                     tool.runNext(self.task)
+                    self.instanceCounter = self.instanceCounter + 1
+                    if self.saveFrequenzy > 0 and self.instanceCounter > self.saveFrequenzy:
+                        self.save("autosave{}".format(self.saveCounter))
+                        self.saveCounter=self.saveCounter+1
+                        self.instanceCounter = 0
                 except IndexError:
                     tool.toCSV()
                     break
@@ -84,6 +92,7 @@ class Scheduler:
                     return
 
     def save(self, fileName="savedState"):
+        print "Saving statfile:", fileName
         with open(fileName,"wb") as f:
             pickle.dump(self, f)
 

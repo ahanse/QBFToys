@@ -10,14 +10,11 @@ from subprocess import PIPE, check_output, CalledProcessError, call
 
 import scheduler
 
-# TODO: temp management
-
 class PreprocessorError(Exception):
     pass
 class ConverterError(Exception):
     pass
 
-#def convert(infile, outfileName, command):
 def convert(infileFullName, infileName, outpath, prepNmr, command):
     print "Converting {} with {}.".format(infileName,command)
     with open(infileFullName,"r") as infile: 
@@ -82,7 +79,7 @@ def newRun(args):
                 instance = scheduler.Instance(file,[fullName, fileName, args.output], preprocessors)
                 tool.addInstance(instance)
    
-    sche = scheduler.Scheduler(convert,[tool]) 
+    sche = scheduler.Scheduler(convert,[tool],args.maxtemp,args.continuetemp,args.autosave) 
     sche.run()
 
 def resumeRun(args):
@@ -102,6 +99,9 @@ parser_start.add_argument("-r", "--results", type=str, help="name for csv file c
     default="results.csv")
 parser_start.add_argument("-p","--preprocessors", help="CSV file containing the preprocessor commands.",
     type=str, default="preprocessors.csv")
+parser_start.add_argument("-m","--maxtemp", help="If the temperature is reached, the script waits until the temperature is below 'continuetemp'", type=int, default=0)
+parser_start.add_argument("-c","--continuetemp", help="If the temperature falls bellow this value, the script is continued.", type=int, default=0)
+parser_start.add_argument("-a","--autosave", help="Saves the state all N converted files.", type=int, default=0)
 parser_start.set_defaults(func=newRun)
 
 parser_resume =  subparsers.add_parser('resume')
