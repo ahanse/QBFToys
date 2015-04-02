@@ -8,14 +8,6 @@ import pickle
 import csv
 import signal
 
-class StdOutWrapper:
-    text = ""
-    def write(self,txt):
-        self.text += txt
-        self.text = '\n'.join(self.text.split('\n')[-30:])
-    def get_text(self,beg,end):
-        return '\n'.join(self.text.split('\n')[beg:end])
-
 class Instance:
     def __init__(self, name, constantArgs, versions):
         self.constantArgs = constantArgs
