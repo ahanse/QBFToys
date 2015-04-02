@@ -1,0 +1,4 @@
+Name ; Command
+Bloqqer def. ; ../bloqqer --timeout=40
+Bloqqer bce only; ../bloqqer --timeout=40 --eq=0 --ve=0 --exp=0 --hte=0 --cce=0 --hbce=0
+Bloqqer bce variations; ../bloqqer --timeout=40 --eq=0 --ve=0 --exp=0 --cce=0 
