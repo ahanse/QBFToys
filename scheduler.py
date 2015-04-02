@@ -7,6 +7,29 @@
 import pickle
 import csv
 import signal
+import time
+
+TEMPFILE="/sys/class/thermal/thermal_zone0/temp"
+
+def getTemp():
+    with open(TEMPFILE) as f:
+        return int(f.read())
+    
+def temperatureMeasurmentAvailable():
+    try:
+        getTemp()
+        return True
+    except IOError:
+        return False
+    
+def checkTemperatureAndWait(maxt, cont):
+    temp = getTemp()
+    if temp < maxt*1000
+        print "Current temp.:", temp/1000.0
+        return
+    while temp > cont*1000:
+        print "current temp.:", temp/1000.0, "Waiting for 5s!"
+        time.sleep(5)
 
 class Instance:
     def __init__(self, name, constantArgs, versions):
@@ -70,11 +93,16 @@ class Scheduler:
         self.saveCounter = 1
         self.instanceCounter = 0 
         self.saveFrequenzy = saveFrequenzy
+        if not temperatureMeasurmentAvailable():
+            print "Temperature measurment not available. Deactivating temperature controll."
+            maxTemp = continueTemp = 0
     
     def run(self):
         for tool in self.tools:
             while True:
                 try:
+                    if self.maxTemp !=0 and self.continueTemp !=0:
+                        checkTemperatureAndWait(self.maxTemp, self.continueTemp)
                     tool.runNext(self.task)
                     self.instanceCounter = self.instanceCounter + 1
                     if self.saveFrequenzy > 0 and self.instanceCounter > self.saveFrequenzy:
