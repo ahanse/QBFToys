@@ -24,7 +24,7 @@ def temperatureMeasurmentAvailable():
     
 def checkTemperatureAndWait(maxt, cont):
     temp = getTemp()
-    if temp < maxt*1000
+    if temp < maxt*1000:
         print "Current temp.:", temp/1000.0
         return
     while temp > cont*1000:
