@@ -13,5 +13,5 @@ All tools should output usage informations if called without command line argume
 To compile the haskell script, run:
 
 ```
-ghc --make converter.hs
+ghc -O2 --make converter.hs
 ```
