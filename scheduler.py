@@ -92,7 +92,10 @@ class Scheduler:
         self.continueTemp = continueTemp
         self.saveCounter = 1
         self.instanceCounter = 0 
-        self.saveFrequenzy = saveFrequenzy
+        #self.saveFrequenzy = saveFrequenzy
+        if saveFrequenzy > 0:
+            print "Autosave broken and deactivated."
+        self.saveFrequenzy = 0
         if not temperatureMeasurmentAvailable():
             print "Temperature measurment not available. Deactivating temperature controll."
             maxTemp = continueTemp = 0
