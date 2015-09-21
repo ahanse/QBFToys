@@ -1,6 +1,5 @@
 # General
 
-* tests
 * better output of meta information of formulas
 * better metrics
 
@@ -20,4 +19,9 @@ See:
 * [A Survey on DQBF: Formulas, Applications,
 Solving Approaches](http://fmv.jku.at/quantify15/Kovasznai_QUANTIFY2015.pdf)
 * [Henkin Quantifiers and Boolean Formulae](http://alcom.ee.ntu.edu.tw/publications/sat12.pdf)
+
+# Python Scripts
+
+* Test on QBF solver
+* save runtime
 

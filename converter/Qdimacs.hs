@@ -23,7 +23,6 @@ import           Data.Monoid
 import           Data.Foldable                        (foldMap)
 import           Data.List                            (intersperse)
 
-
 type Variable = Int --Word
 type Literal = Int
 type Clause = [Literal]

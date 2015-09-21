@@ -14,7 +14,7 @@ import scheduler
 
 def readPreprocessorDescription(fileName):
     preprocessors = []
-    # Read prprocessor description
+    # Read preprocessor description
     try:
         with open(fileName, 'rb') as csvFile:
             preprocessorReader = csv.reader(csvFile, delimiter=';')
@@ -48,14 +48,14 @@ def readResults(fileName):
 
 def readSolvers(fileName):
     solvers = []
-    # Read prprocessor description
+    # Read solver description
     try:
         with open(fileName, 'rb') as csvFile:
             solverReader = csv.reader(csvFile, delimiter=';')
             solverReader.next() #skip header
             solvers=map(lambda x:x[1], solverReader)
     except IndexError:
-        print "Not enough columngs in solver decleration."
+        print "Not enough columns in solver decleration."
         sys.exit(1)
     return solvers 
 
