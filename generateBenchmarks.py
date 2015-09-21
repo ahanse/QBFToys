@@ -19,7 +19,7 @@ def convert(infileFullName, infileName, outpath, prepNmr, command):
     print "Converting {} with {}.".format(infileName,command)
     with open(infileFullName,"r") as infile: 
         try:
-            outfileFullName =os.path.join(outpath,str(prepNmr),infileName)
+            outfileFullName = os.path.join(outpath,str(prepNmr),infileName)
             prepFile = open(outfileFullName+".qdimacs", "w")
             returnCode = call(command, shell=True, stdin=infile, stdout=prepFile)
             prepFile.close()
@@ -36,13 +36,13 @@ def convert(infileFullName, infileName, outpath, prepNmr, command):
                 statusFlag = "s"
             return [int(h[0]), int(h[1]), statusFlag] 
         except OSError:
-            print "[Error exec.:{}]".format(command)
+            print "[Error exec.: {}]".format(command)
         except CalledProcessError:
-            print "[Called Process Error exec.:{}]".format(command)
+            print "[Called Process Error exec.: {}]".format(command)
         except ConverterError:
-            print "[Converter Error:{}]".format(command)
+            print "[Converter Error: {}]".format(command)
         except PreprocessorError:
-            print "[Preprocessor Error:{}]".format(command)
+            print "[Preprocessor Error: {}]".format(command)
         return [0, 0, "e"]
 
 def newRun(args):
