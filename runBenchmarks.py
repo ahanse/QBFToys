@@ -71,7 +71,7 @@ def runSolver(solver, benchmarkFile, logFileName, timeout):
            result = 't' 
         if returnCode == 10:
            result = 'c'
-    return result, ts
+    return result, td
 
 """ States: b...to big
             e...error
@@ -123,13 +123,7 @@ def newRun(args):
                 [benchmarkFilename, variables, clauses, state],solvers)
             tool.addInstance(instance)
         tools.append(tool)
-    sche = scheduler.Scheduler(doBenchmark,tools, args.maxtemp,args.continuetemp, args.autosave)
-    sche.run()
-
-def resumeRun(args):
-    print "Restoring from", args.savedState
-    sche = scheduler.restoreScheduler(args.savedState)
-    print "Resuming"
+    sche = scheduler.Scheduler(doBenchmark,tools)
     sche.run()
 
 parser = argparse.ArgumentParser(description='Automatically runs a benchmark of HOL and QBF solver.')
@@ -151,15 +145,7 @@ parser_start.add_argument("-t", "--timeout", type=str,
     help="timeout for each solver in seconds.")
 parser_start.add_argument("-q", "--qbf", type=str, 
     help="QBF solver used as reference")
-parser_start.add_argument("-m","--maxtemp", help="If the temperature is reached, the script waits until the temperature is below 'continuetemp'", type=int, default=0)
-parser_start.add_argument("-o","--continuetemp", help="If the temperature falls bellow this value, the script is continued.", type=int, default=0)
-parser_start.add_argument("-a","--autosave", help="Saves the state all N converted files.", type=int, default=0)
 parser_start.set_defaults(func=newRun)
-
-parser_resume =  subparsers.add_parser('resume')
-parser_resume.add_argument('savedState',type=str,
-    help='File containing a previously saved state.')
-parser_resume.set_defaults(func=resumeRun)
 
 args = parser.parse_args()
 args.func(args)

@@ -79,13 +79,7 @@ def newRun(args):
                 instance = scheduler.Instance(file,[fullName, fileName, args.output], preprocessors)
                 tool.addInstance(instance)
    
-    sche = scheduler.Scheduler(convert,[tool],args.maxtemp,args.continuetemp,args.autosave) 
-    sche.run()
-
-def resumeRun(args):
-    print "Restoring from", args.savedState
-    sche = scheduler.restoreScheduler(args.savedState)
-    print "Resuming"
+    sche = scheduler.Scheduler(convert,[tool]) 
     sche.run()
 
 parser = argparse.ArgumentParser(description='Recursively converts .qdimacs problems into thf problems.')
@@ -99,15 +93,8 @@ parser_start.add_argument("-r", "--results", type=str, help="name for csv file c
     default="results.csv")
 parser_start.add_argument("-p","--preprocessors", help="CSV file containing the preprocessor commands.",
     type=str, default="preprocessors.csv")
-parser_start.add_argument("-m","--maxtemp", help="If the temperature is reached, the script waits until the temperature is below 'continuetemp'", type=int, default=0)
-parser_start.add_argument("-c","--continuetemp", help="If the temperature falls bellow this value, the script is continued.", type=int, default=0)
-parser_start.add_argument("-a","--autosave", help="Saves the state all N converted files.", type=int, default=0)
 parser_start.set_defaults(func=newRun)
 
-parser_resume =  subparsers.add_parser('resume')
-parser_resume.add_argument('savedState',type=str,
-    help='File containing a previously saved state.')
-parser_resume.set_defaults(func=resumeRun)
 
 args = parser.parse_args()
 args.func(args)
