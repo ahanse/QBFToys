@@ -22,6 +22,7 @@ convertClause (c:cs) =
     convertLiteral c <> mconcat [charUtf8 '|' <> convertLiteral c'|c'<-cs]
 
 convertTypedVar i = charUtf8 'X' <> intDec i <> stringUtf8 ": $o"
+
 convertQuant [] = mempty
 convertQuant (c:cs) =
     convertTypedVar c <> mconcat [charUtf8 ',' <> convertTypedVar c'|c'<-cs]
@@ -45,7 +46,7 @@ convertFA ∷ [[Variable]] → [Clause] → Builder
 convertFA [] c = convertClauseList c
 convertFA (q:t) c 
     | q==[] = convertTE t c
-    | otherwise = addQuant '!' (convertQuant q) (convertFA t c)
+    | otherwise = addQuant '!' (convertQuant q) (convertTE t c)
 
 toThf ∷ Bool → QBFProblem → Builder
 toThf False (v,c) = stringUtf8 "thf(c,conjecture," <> (convertTE v c) <> stringUtf8 ").\n" 
