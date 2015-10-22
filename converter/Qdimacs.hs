@@ -93,7 +93,7 @@ normalizeVars (vars, clauses) = (v',c')
 quantifieUndeclaredVars ∷ QBFProblem → QBFProblem
 quantifieUndeclaredVars (vars@(vh:vt),c) = ((vh++newVars):vt,c)
     where varSet = Set.fromList $ concat vars 
-          varsInClauses = Set.fromList $ ((map fromIntegral).concat) c
+          varsInClauses = Set.fromList $ ((map (fromIntegral.abs)).concat) c
           newVars = Set.toList $ Set.difference varsInClauses varSet
 
 type IsTrivial = Maybe Bool
