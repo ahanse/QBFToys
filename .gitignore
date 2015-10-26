@@ -1,4 +1,4 @@
 *.hi
-converter
 *.o
 *.swp
+converter/dist/

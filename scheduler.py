@@ -9,28 +9,6 @@ import csv
 import signal
 import time
 
-TEMPFILE="/sys/class/thermal/thermal_zone0/temp"
-
-def getTemp():
-    with open(TEMPFILE) as f:
-        return int(f.read())
-    
-def temperatureMeasurmentAvailable():
-    try:
-        getTemp()
-        return True
-    except IOError:
-        return False
-    
-def checkTemperatureAndWait(maxt, cont):
-    temp = getTemp()
-    if temp < maxt*1000
-        print "Current temp.:", temp/1000.0
-        return
-    while temp > cont*1000:
-        print "current temp.:", temp/1000.0, "Waiting for 5s!"
-        time.sleep(5)
-
 class Instance:
     def __init__(self, name, constantArgs, versions):
         self.constantArgs = constantArgs
@@ -81,50 +59,20 @@ class Tool:
                 outfile.writerow(row)
 
 class Scheduler:
-    def __init__(self, task, tools, maxTemp=0, continueTemp=0, saveFrequenzy=0):
+    def __init__(self, task, tools):
         self.task = task
         self.tools = tools
-        if maxTemp < continueTemp:
-            print "Maximal temperature smaller than continuation temperature."
-            print "Temperature contoll not activated."
-            maxTemp = continueTemp = 0
-        self.maxTemp = maxTemp
-        self.continueTemp = continueTemp
-        self.saveCounter = 1
-        self.instanceCounter = 0 
-        self.saveFrequenzy = saveFrequenzy
-        if not temperatureMeasurmentAvailable():
-            print "Temperature measurment not available. Deactivating temperature controll."
-            maxTemp = continueTemp = 0
     
     def run(self):
         for tool in self.tools:
             while True:
                 try:
-                    if self.maxTemp !=0 and self.continueTemp !=0:
-                        checkTemperatureAndWait(self.maxTemp, self.continueTemp)
                     tool.runNext(self.task)
-                    self.instanceCounter = self.instanceCounter + 1
-                    if self.saveFrequenzy > 0 and self.instanceCounter > self.saveFrequenzy:
-                        self.save("autosave{}".format(self.saveCounter))
-                        self.saveCounter=self.saveCounter+1
-                        self.instanceCounter = 0
                 except IndexError:
                     tool.toCSV()
                     break
                 except KeyboardInterrupt:
                     # This is not very secure, the interrupt has to happen during the run
                     # of the external tool -.-
-                    print "Catched keyboard interrupt. Saving State."
-                    self.save()
+                    print "Keyboard interrupt."
                     return
-
-    def save(self, fileName="savedState"):
-        print "Saving statfile:", fileName
-        with open(fileName,"wb") as f:
-            pickle.dump(self, f)
-
-def restoreScheduler(fileName):
-    with open(fileName,"rb") as f:
-        s = pickle.load(f)
-        return s
