@@ -28,7 +28,7 @@ def convert(infileFullName, infileName, outpath, prepNmr, command):
            
             # convert
             convertedFile = open(outfileFullName+".qdimacs","r")
-            command = "./converter -o {}".format(outfileFullName+".thf")
+            command = "./converter -i -o {}".format(outfileFullName+".thf")
             h = check_output(command, shell=True, stdin=convertedFile)
             h=h.split()
             statusFlag = "n"
