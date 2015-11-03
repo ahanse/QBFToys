@@ -38,6 +38,7 @@ allQuantifier = do
   m_whiteSpace
   vars <- varList
   char ':'
+  m_whiteSpace
   return (AQuant vars)
 
 existsQuantifier :: Parser EQuant
@@ -45,9 +46,9 @@ existsQuantifier = do
   char 'E'
   m_whiteSpace
   deps <- m_braces varList
-  m_whiteSpace
   vars <- varList
   char ':'
+  m_whiteSpace
   return (EQuant deps vars)
 
 aliasedOp l = choice $ fmap m_reservedOp l
@@ -66,9 +67,9 @@ expression = buildExpressionParser expressionTable term
 
 dqbfParser = do
   m_whiteSpace
-  allQ <- allQuantifier
+  allQ <- many1 allQuantifier
   m_whiteSpace
-  existsQ <- existsQuantifier
+  existsQ <- many1 existsQuantifier
   m_whiteSpace
   expr <- expression
   eof

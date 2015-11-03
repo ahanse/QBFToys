@@ -1,5 +1,6 @@
 *.hi
 *.o
 *.swp
-converter/dist/
-dqbfTool/dist/
+*/dist/
+*/.cabal-sandbox
+*/cabal.sandbox.config
