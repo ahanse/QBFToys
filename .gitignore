@@ -1,4 +1,6 @@
 *.hi
 *.o
 *.swp
-converter/dist/
+*/dist/
+*/.cabal-sandbox
+*/cabal.sandbox.config
