@@ -1,18 +1,28 @@
 name: dqbfTool
 version: 0.1.0.0
 license-file: LICENSE
-author: Hans-Jörg Schurr
-maintainer: hans-joerg@schurr.at
+author: Hans-Joerg Schurr
+maintainer: commits@schurr.at
 build-type: Simple
 cabal-version: >=1.10
 
 --executable dqbfTool
 library
-  exposed-modules: DQBF, DQBFParser
+  exposed-modules: DQBF, DQBFParser, THFdqbf, DQBF2THF
 --  main-is: Main.hs
-  build-depends: base >=4.6, parsec>=3.1, hspec >= 1.3
+  build-depends: base >=4.6, parsec>=3.1, hspec >= 1.3, bytestring >= 0.10, containers >= 0.5
   hs-source-dirs: src
   default-language: Haskell2010
+  default-extensions: UnicodeSyntax
+
+executable dqbfTool
+  main-is: Main.hs
+  other-modules: DQBF, DQBFParser, THFdqbf, DQBF2THF
+  -- other-extensions:
+  build-depends: base >=4.6, parsec>=3.1, hspec >= 1.3, bytestring >= 0.10, containers >= 0.5
+  hs-source-dirs: src
+  default-language: Haskell2010
+  default-extensions: UnicodeSyntax
 
 -- Test setup like:
 -- https://github.com/kazu-yamamoto/unit-test-example/blob/master/markdown/en/tutorial.md

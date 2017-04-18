@@ -46,7 +46,7 @@ existsQuantifier = do
   char 'E'
   m_whiteSpace
   deps <- m_braces varList
-  vars <- varList
+  vars <- many1 m_identifier
   char ':'
   m_whiteSpace
   return (EQuant deps vars)
