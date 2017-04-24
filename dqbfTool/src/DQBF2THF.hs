@@ -56,8 +56,8 @@ universalVars q = (T.Universal all , replace)
     replace (D.Var s) = liftA T.Variable $ Map.lookup s m
     replace _ = Nothing
 
-transform ∷ ([D.AQuant], [D.EQuant], D.Expression) → T.Problem
-transform (a,e,m) = T.Positive tu te $ transform m
+transform ∷ Bool → ([D.AQuant], [D.EQuant], D.Expression) → T.Problem
+transform invert (a,e,m) = if invert then T.Negative tu te $ transform m else T.Positive tu te $ transform m
   where
     (tu, r1)  = universalVars a
     (te, r2)  = skolemFunctions e

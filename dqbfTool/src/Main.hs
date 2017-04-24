@@ -38,10 +38,10 @@ main = do
             let parsed = parse dqbfParser "STDIO" input
             case parsed of
               Right dqbf → do
-                let output = (buildThf.transform) dqbf
+                let output = (buildThf.(transform (Invert `elem` args))) dqbf
                 case (getOutfileName args) of
                     Just path → do
-                        handle ← openFile path WriteMode
+                        handle ← openFile path WriteMode 
                         hSetBinaryMode handle True
                         hSetBuffering handle $ BlockBuffering Nothing
                         hPutBuilder handle output
