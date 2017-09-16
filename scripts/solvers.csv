@@ -1,3 +1,0 @@
-Prover;Cmd
-LEO-II;./timeout -c -t %t -m 7340032 ./leo --atprc leoatprc -t %t %f
-Satallax;./timeout -c -m 7340032 ./satallax -M ./satallax-2.7/modes/ -E ./eprover -t %t %f
