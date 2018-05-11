@@ -1,17 +1,17 @@
-# QBF and DQBF to TPTP THF converters 
+# QBF and DQBF to TPTP THF and SMT-LIB2 converters 
 
 This repository contains tools to convert QBF problems in QDIMACs format
 and DQBF problem in BUNSAT format to higher-order problems in TPTP THF
-format.
+format. Furthermore, coversation from QDIMACS to SMT-LIB2 is also possible.
 
 ## Building the Tool
 Both tools are written in Haskell. While there are multiple ways to build the
 tools, using the [Stack](https://haskellstack.org) build toolis strongly
 recommended by us and documented here. To install Stack follow the
-nstructions on the Stack homepage.
+instructions on the Stack homepage.
 
 The `qbfTool` folder contains the source code for the QBF to
-HOL converter, and the DQBF tool is in the `dqbfTool` folder.
+HOL/SMT-LIB converter, and the DQBF tool is in the `dqbfTool` folder.
 After the installation of Stack is complete, open a terminal and navigate to
 either folder. Then run then following commands, where `{tool}` is
 either `qbfTool`, or `dqbfTool`:
@@ -127,6 +127,10 @@ towards showing validity and will seldom deduce that an input problem is not
 valid. Hence, the `-i` command line parameter will instruct `qbfTool`
 to add a negation in front of the output problem. The resulting problem will
 be a theorem if an only if the input problem is unsatisfiable.
+
+To convert the input probem into a SMT-LIB2 problem the `-s` option can 
+be used. The resulting problem is in the *UF* logic and can be read by
+many SMT solvers.
 
 Finally, the `-o {filename}` parameter can be used to instruct `qbfTool` to
 write the output into a file. If this parameter is used, `qbfTool` will
