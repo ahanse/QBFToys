@@ -17,7 +17,7 @@ cabal-version: >=1.10
 
 executable qbfTool
   main-is: Main.hs
-  other-modules: Qdimacs, Thf
+  other-modules: Qdimacs, Thf, SMTLib
   -- other-extensions:
   build-depends: base >=4.6, bytestring >=0.10, containers >=0.5, QuickCheck >= 2.8
   -- hs-source-dirs:

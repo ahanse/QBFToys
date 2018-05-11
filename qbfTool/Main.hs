@@ -1,5 +1,6 @@
 import Qdimacs 
 import Thf
+import SMTLib
 import System.IO
 import System.Environment
 import Text.Printf
@@ -7,19 +8,21 @@ import System.Console.GetOpt
 import System.Exit
 import Data.ByteString.Lazy.Builder (hPutBuilder)
 
-data Flag = Normalize | Invert | Output String
+data Flag = Normalize | Invert | SMTLib |  Output String
     deriving (Eq,Ord,Show)
 
 
 flags = [Option ['n'] [] (NoArg Normalize)
             "Outputs a standard complient Qdimacs problem.",
+         Option ['s'] [] (NoArg SMTLib)
+            "Output an SMT-LIB 2 problem.",
          Option ['i'] [] (NoArg Invert)
             (unlines ["Negates the generated THF problem. The conjecture is",
              "a theorem iff the QBF formular is false."]),
          Option ['o'] [] (ReqArg Output "FILE")
             "Output FILE"]
 
-header = unlines ["Usage: convert [-n] [-i] [-o FILE]\n",
+header = unlines ["Usage: convert [-n] [-s] [-i] [-o FILE]\n",
          "If an output filename is given a line containing the",
          "number of variables, clauses and if the problem was",
          "\"Trivally True\" (contained no clause) or \"Trivally False\"",
@@ -42,6 +45,11 @@ cleanQBF p = (s,p'')
                 Just True → "Trivally True"
                 Just False → "Trivally False")
 
+outputFun args
+    | Normalize `elem` args  = toQdimacs
+    | SMTLib `elem` args  = toSMTLib (Invert `elem` args)
+    | otherwise = toThf (Invert `elem` args)
+
 main ∷ IO ()
 main = do
     args ← getArgs
@@ -50,8 +58,7 @@ main = do
             input ← getContents
             let prop = readProblem $ lines input 
                 (desc, prop') = cleanQBF prop
-                output = (if Normalize `elem` args 
-                            then toQdimacs else toThf (Invert `elem` args)) prop'
+                output = (outputFun args) prop'
                 maybePath = getOutfileName args
             case maybePath of
                 Just path → do 
